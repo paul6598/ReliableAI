@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-def fgsm(model, x, target, eps = 0.3, targeted = False, device=None, **kwargs):
+def fgsm(model, x, target, eps = 0.05, targeted = False, device=None, **kwargs):
     """
     model : the neural network
     x : input image tensor (requires_grad should be set)

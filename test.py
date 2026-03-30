@@ -9,7 +9,7 @@ from algorithm.pgd import pgd
 
 def main():
     eps = 0.3
-    eps_step = 0.01
+    eps_step = eps/30
     k = 40
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for dataset in ["cifar10", "mnist"]:
