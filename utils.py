@@ -11,6 +11,9 @@ from algorithm.fgsm import fgsm
 from algorithm.pgd import pgd
 
 class cnn_for_mnist(nn.Module):
+    """
+    A simple CNN for MNIST classification.
+    """
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
@@ -30,6 +33,9 @@ class cnn_for_mnist(nn.Module):
         return x
     
 class pretrained_for_cifar10(nn.Module):
+    """
+    A wrapper for the pretrained model to  normalization.
+    """
     def __init__(self, pretrained_model):
         super().__init__()
         self.pretrained_model = pretrained_model 
@@ -45,6 +51,7 @@ class pretrained_for_cifar10(nn.Module):
 def preprocess(dataset_name, batch_size = 128):
     """
     dataset_name: "mnist" 또는 "cifar10"
+    MNIST와 CIFAR-10 데이터셋을 다운로드하고 DataLoader로 반환.
     return: train_loader, test_loader
     """
     
@@ -70,6 +77,9 @@ def preprocess(dataset_name, batch_size = 128):
 
 
 def train(dataset_name, train_loader, test_loader):
+    """
+    MNIST인 경우 간단한 CNN을 학습시키고, CIFAR-10인 경우 사전 학습된 모델을 로드하여 반환.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if dataset_name == "mnist":
         model = cnn_for_mnist().to(device)
@@ -159,6 +169,7 @@ def save_images(images, path):
     """
     images : a batch of image tensors
     path : the path to save the images
+    상위 10개의 이미지를 지정된 경로에 저장.
     """
     for i in range(10):
         save_image(images[i], os.path.join(path, f"result_{i}.png"))
@@ -168,6 +179,7 @@ def targeted_label(true_label, num_classes=10):
     true_label: the correct class label
     num_classes: total number of classes in the dataset
     return: a random target label different from the true label
+    targeted = True인 경우, 공격이 목표로 하는 잘못된 클래스 레이블을 생성하는 함수.
     """
     targets = torch.randint(0, num_classes, true_label.shape).to(true_label.device)
     mask = (targets == true_label)

@@ -8,9 +8,9 @@ from algorithm.fgsm import fgsm
 from algorithm.pgd import pgd
 
 def main():
-    eps = 0.3
-    eps_step = eps/30
-    k = 40
+    eps = 0.05
+    eps_step = 0.05/30
+    k = 200
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for dataset in ["cifar10", "mnist"]:
         train_loader, test_loader = preprocess(dataset)

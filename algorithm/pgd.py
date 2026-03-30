@@ -6,12 +6,12 @@ import torch.nn as nn
 def pgd(model, x, target, eps = 0.3, eps_step = 0.01, k = 40, targeted = False, device=None, **kwargs):
     """
     model : the neural network
-    x : input image tensor
-    target : desired (wrong) class label
-    k : number of iterations (e.g., 10, 40)
-    eps : total perturbation budget
-    eps_step : step size per iteration
-    return : adversarial image x_adv
+    x : input image tensor (requires_grad should be set)
+    target : the desired (wrong) class label
+    eps : perturbation magnitude (e.g., 0.1, 0.3)
+    eps_step : step size for each iteration
+    k : number of iterations
+    return : adversarial image 
     """
     device = device
     x = x.clone().detach().to(device)

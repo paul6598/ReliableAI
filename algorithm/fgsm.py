@@ -6,9 +6,10 @@ def fgsm(model, x, target, eps = 0.05, targeted = False, device=None, **kwargs):
     """
     model : the neural network
     x : input image tensor (requires_grad should be set)
-    target : the desired (wrong) class label
+    target : class label
     eps : perturbation magnitude (e.g., 0.1, 0.3)
-    return : adversarial image x_adv
+    targeted : whether the attack is targeted
+    return : adversarial image
     """
     device = device
     x = x.clone().detach().to(device)
