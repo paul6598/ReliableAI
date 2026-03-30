@@ -23,3 +23,12 @@ def fgsm_targeted(model, x, target, eps):
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
 
     return perturbed_image
+
+def fgsm_untargeted(model, x, label, eps):
+    """
+    model : the neural network
+    x : input image tensor
+    label : the correct class label
+    eps : perturbation magnitude
+    return : adversarial image x_adv
+    """
