@@ -1,1 +1,2 @@
-import torch
+torch==2.8.0
+torchvision==0.15.2a0

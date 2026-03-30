@@ -128,6 +128,10 @@ def adversarial_attack(model, loader, dataset, targeted, attack_function, **kwar
     images, labels = next(iter(loader))
 
     images, labels = images.to(device), labels.to(device)
+    origin_path = f"./results/{dataset}/original"
+    os.makedirs(origin_path, exist_ok=True)
+    for i in range(10):
+        save_image(images[i], os.path.join(f"./results/{dataset}/original", f"result_{i}.png"))
     total = labels.size(0)
     with torch.no_grad():
         outputs = model(images)
@@ -139,7 +143,7 @@ def adversarial_attack(model, loader, dataset, targeted, attack_function, **kwar
         target_labels = targeted_label(labels)
     else:
         target_labels = labels
-    attacked_images = attack_function(model, images, target_labels, **kwargs)
+    attacked_images = attack_function(model, images, target_labels, targeted=targeted, **kwargs)
     save_images(attacked_images.cpu(), save_path)
     with torch.no_grad():
         outputs = model(attacked_images)

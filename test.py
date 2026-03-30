@@ -1,5 +1,5 @@
 import os
-from xml.parsers.expat import model
+
 import torch
 from torchvision import utils
 
@@ -8,17 +8,18 @@ from algorithm.fgsm import fgsm
 from algorithm.pgd import pgd
 
 def main():
-    eps = 0.05
-    eps_step = eps/20
+    eps = 0.3
+    eps_step = 0.01
+    k = 40
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for dataset in ["cifar10", "mnist"]:
         train_loader, test_loader = preprocess(dataset)
         model = train(dataset, train_loader, test_loader)
         for targeted in [True, False]:
             for attack_function in [fgsm, pgd]:
-                print("#" * 50)
+                print("=" * 50)
                 print(f"Processing dataset: {dataset}")
                 print(f"Attack method: {'targeted' if targeted else 'untargeted'} {attack_function.__name__}")
-                adversarial_attack(model, test_loader, dataset, targeted, attack_function, eps = eps, eps_step = eps, k = 40, device = device)
+                adversarial_attack(model, test_loader, dataset, targeted, attack_function, eps = eps, eps_step = eps_step, k = k, device = device)
 if __name__ == "__main__":
     main()
