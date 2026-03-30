@@ -1,8 +1,8 @@
 import torch
-import torch.nn as F
+import torch.nn as nn
 
 
-def fgsm_targeted(model, x, target, eps):
+def fgsm(model, x, target, eps, targeted):
     """
     model : the neural network
     x : input image tensor (requires_grad should be set)
@@ -12,23 +12,39 @@ def fgsm_targeted(model, x, target, eps):
     """
     x.requires_grad_(True)
     prediction = model(x)
-    ce = F.CrossEntropyLoss()
+    ce = nn.CrossEntropyLoss()
     loss = ce(prediction, target)
 
     model.zero_grad()
     loss.backward()
 
     data_grad = x.grad.data
-    perturbed_image = x - eps * data_grad.sign()
+    if targeted:
+        perturbed_image = x - eps * data_grad.sign()
+    else:
+        perturbed_image = x + eps * data_grad.sign()
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
 
     return perturbed_image
 
-def fgsm_untargeted(model, x, label, eps):
-    """
-    model : the neural network
-    x : input image tensor
-    label : the correct class label
-    eps : perturbation magnitude
-    return : adversarial image x_adv
-    """
+# def fgsm_untargeted(model, x, label, eps):
+#     """
+#     model : the neural network
+#     x : input image tensor
+#     label : the correct class label
+#     eps : perturbation magnitude
+#     return : adversarial image x_adv
+#     """
+#     x.requires_grad_(True)
+#     prediction = model(x)
+#     ce = F.CrossEntropyLoss()
+#     loss = ce(prediction, label)
+
+#     model.zero_grad()
+#     loss.backward()
+
+#     data_grad = x.grad.data
+#     perturbed_image = x + eps * data_grad.sign()
+#     perturbed_image = torch.clamp(perturbed_image, 0, 1)
+
+#     return perturbed_image
