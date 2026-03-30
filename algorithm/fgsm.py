@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-def fgsm(model, x, target, eps, targeted):
+def fgsm(model, x, target, eps = 0.1, targeted = False, device=None, **kwargs):
     """
     model : the neural network
     x : input image tensor (requires_grad should be set)
@@ -10,8 +10,12 @@ def fgsm(model, x, target, eps, targeted):
     eps : perturbation magnitude (e.g., 0.1, 0.3)
     return : adversarial image x_adv
     """
+    device = device
+    x = x.clone().detach().to(device)
+    target = target.clone().detach().to(device)
+
     x.requires_grad_(True)
-    prediction = model(x)
+    prediction = model(x).to(device)
     ce = nn.CrossEntropyLoss()
     loss = ce(prediction, target)
 

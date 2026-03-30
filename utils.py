@@ -1,10 +1,14 @@
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
 from torchvision import datasets, transforms
+from torchvision.utils import save_image
 from torch.utils.data import DataLoader
+from algorithm.fgsm import fgsm
+from algorithm.pgd import pgd
 
 class cnn_for_mnist(nn.Module):
     def __init__(self):
@@ -38,7 +42,7 @@ class pretrained_for_cifar10(nn.Module):
             return self.pretrained_model(x_normalized) 
 
 
-def preprocess(dataset_name, batch_size = 64):
+def preprocess(dataset_name, batch_size = 128):
     """
     dataset_name: "mnist" 또는 "cifar10"
     return: train_loader, test_loader
@@ -71,7 +75,7 @@ def train(dataset_name, train_loader, test_loader):
         model = cnn_for_mnist().to(device)
         loss_function = nn.CrossEntropyLoss()
         optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) 
-        for epoch in range(2):  # loop over the dataset multiple times
+        for epoch in range(5):  # loop over the dataset multiple times
 
             running_loss = 0.0
             for i, data in enumerate(train_loader, 0):
@@ -89,9 +93,9 @@ def train(dataset_name, train_loader, test_loader):
 
                 # print statistics
                 running_loss += loss.item()
-                if i % 100 == 99:    
-                    print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
-                    running_loss = 0.0
+                # if i % 100 == 99:    
+                #     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
+                #     running_loss = 0.0
         model.eval()
     
     if dataset_name == "cifar10":
@@ -102,3 +106,68 @@ def train(dataset_name, train_loader, test_loader):
 
     return model
 
+def adversarial_attack(model, loader, dataset, targeted, attack_function, **kwargs):
+    """
+    model : the neural network
+    loader : the data loader
+    x : input image tensor
+    targeted : whether the attack is targeted
+    attack_function : the attack function to use
+    attack_method : the attack method to use (e.g., "fgsm", "pgd")
+    kwargs : additional arguments for the attack method
+    return : adversarial image x_adv
+    """
+    save_path = f"./results/{dataset}/{'targeted' if targeted else 'untargeted'}/{attack_function.__name__}"
+    os.makedirs(save_path, exist_ok=True)
+    model.eval()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    total = 0
+    correct = 0
+    attack_success = 0
+    
+    images, labels = next(iter(loader))
+
+    images, labels = images.to(device), labels.to(device)
+    total = labels.size(0)
+    with torch.no_grad():
+        outputs = model(images)
+        preds = outputs.argmax(dim=1)
+        correct_mask = (preds == labels)
+        correct += correct_mask.sum().item()
+
+    if targeted:
+        target_labels = targeted_label(labels)
+    else:
+        target_labels = labels
+    attacked_images = attack_function(model, images, target_labels, **kwargs)
+    save_images(attacked_images.cpu(), save_path)
+    with torch.no_grad():
+        outputs = model(attacked_images)
+        attacked_preds = outputs.argmax(dim=1)
+        if targeted:
+            attack_success += (attacked_preds == target_labels).sum().item()
+        else:
+            attack_success += (attacked_preds != labels).sum().item()
+
+    print(f"Attack success rate: {attack_success / total * 100:.2f}%")
+
+def save_images(images, path):
+    """
+    images : a batch of image tensors
+    path : the path to save the images
+    """
+    for i in range(10):
+        save_image(images[i], os.path.join(path, f"result_{i}.png"))
+
+def targeted_label(true_label, num_classes=10):
+    """
+    true_label: the correct class label
+    num_classes: total number of classes in the dataset
+    return: a random target label different from the true label
+    """
+    targets = torch.randint(0, num_classes, true_label.shape).to(true_label.device)
+    mask = (targets == true_label)
+
+    targets[mask] = (targets[mask] + 1) % num_classes
+    
+    return targets
